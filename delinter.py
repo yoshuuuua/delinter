@@ -2,6 +2,7 @@ import click
 import os
 import re
 import random
+import shutil
 from random import choice
 from string import ascii_uppercase
 from pathlib import Path
@@ -16,18 +17,19 @@ def delint(file):
     for (dirpath, dirnames, filenames) in os.walk(lint_dir):
         for filename in filenames:
             if filename.endswith('.py'):
-                contents = Path(os.path.join(dirpath, filename)).read_text()
+                file_path = Path(os.path.join(dirpath, filename))
+                contents = file_path.read_text()
                 variables_to_replace = get_next_variables(contents)
                 for to_replace in variables_to_replace:
                     var = get_replacement_variable()
-                    print(var)
                     contents = contents.replace(to_replace, var)
-                    print(to_replace)
-                    with open(Path(os.path.join(dirpath, filename)), "r+") as f:
+                    with open(file_path, "r+") as f:
                         data = f.read()
                         f.seek(0)
                         f.write(contents)
                         f.truncate()
+                add_afterline_effects(file_path)
+
     
 
 
@@ -39,9 +41,7 @@ def get_next_variables(contents):
             if group and group not in used_variables:
                 used_variables.append(group)
                 variables_to_return.append(group)
-    print (variables_to_return)
     return variables_to_return
-
 
 def get_replacement_variable():
     while True:
@@ -50,13 +50,12 @@ def get_replacement_variable():
             used_variables.append(variable)
             return variable
 
-used_variables = ["and","except","lambda","with","as","finally","nonlocal","while","assert","false","None","yield","break","for","not","class","from","or","continue","global","pass","def","if","raise","del","import","return","elif","in","True","else","is","try","default","help"]
+def add_afterline_effects(file_path):
+    with open(file_path) as old, open('new_file', 'w') as new:
+        for line in old:
+            new.write(line + ''.join(['\n' for _ in range(random.randint(0,4))]))
+    shutil.move('new_file', file_path)
+
+used_variables = ["__name__","and","except","lambda","with","as","finally","nonlocal","while","assert","false","None","yield","break","for","not","class","from","or","continue","global","pass","def","if","raise","del","import","return","elif","in","True","else","is","try","default","help"]
 if __name__ == '__main__':
     delint()
-
-
-
-
-
-
-
